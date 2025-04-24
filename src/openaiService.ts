@@ -1,4 +1,3 @@
-// src/openaiService.ts
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
 import { Logger } from './utils/logger';
