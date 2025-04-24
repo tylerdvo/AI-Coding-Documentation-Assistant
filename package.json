@@ -1,23 +1,56 @@
 {
   "name": "gpt-documentation-assistant",
   "displayName": "GPT Documentation Assistant",
-  "description": "AI-powered code documentation assistant",
+  "description": "AI-powered code documentation assistant using OpenAI's GPT",
   "version": "0.0.1",
+  "publisher": "YourPublisherName",
   "engines": {
     "vscode": "^1.99.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:csharp"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "gpt-documentation-assistant.helloWorld",
-        "title": "Hello World"
+        "command": "gptDocAssistant.generateDoc",
+        "title": "GPT: Generate Documentation",
+        "category": "GPT Documentation Assistant"
+      },
+      {
+        "command": "gptDocAssistant.updateDoc",
+        "title": "GPT: Update Documentation",
+        "category": "GPT Documentation Assistant"
+      },
+      {
+        "command": "gptDocAssistant.configureSettings",
+        "title": "GPT: Configure Settings",
+        "category": "GPT Documentation Assistant"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "GPT Documentation Assistant",
+      "properties": {
+        "gptDocAssistant.openaiApiKey": {
+          "type": "string",
+          "description": "OpenAI API key for documentation generation"
+        },
+        "gptDocAssistant.documentationStandards": {
+          "type": "object",
+          "description": "Custom documentation standards for different programming languages",
+          "default": {}
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -46,5 +79,17 @@
   },
   "dependencies": {
     "openai": "^4.96.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/gpt-documentation-assistant"
+  },
+  "homepage": "https://github.com/yourusername/gpt-documentation-assistant/blob/main/README.md",
+  "keywords": [
+    "documentation",
+    "ai",
+    "gpt",
+    "openai",
+    "code assistant"
+  ]
 }

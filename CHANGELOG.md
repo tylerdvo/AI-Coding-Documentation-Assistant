@@ -1,9 +1,31 @@
 # Change Log
 
-All notable changes to the "gpt-documentation-assistant" extension will be documented in this file.
+All notable changes to the "GPT Documentation Assistant" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## [0.0.1] - 2025-02-24
 
-## [Unreleased]
+### Added
+- Initial release of GPT Documentation Assistant
+- Support for generating documentation using OpenAI's GPT
+- Multi-language support:
+  - JavaScript
+  - TypeScript
+  - Python
+  - Java
+  - C#
+- Commands:
+  - Generate documentation
+  - Update existing documentation
+- Configurable documentation standards
+- OpenAI API key configuration
 
-- Initial release
+### Known Limitations
+- Requires active OpenAI API key
+- Documentation quality depends on GPT model
+- Limited to function-level documentation
+
+## Future Roadmap
+- Improve multi-language support
+- Add more configuration options
+- Enhance documentation generation accuracy
+- Support for more complex code structures
