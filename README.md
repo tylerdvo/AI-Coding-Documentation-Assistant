@@ -1,8 +1,8 @@
-# GPT Documentation Assistant
+# AI Coding Documentation Assistant
 
 ## Overview
 
-GPT Documentation Assistant is a powerful Visual Studio Code extension that leverages AI to automatically generate and update code documentation across multiple programming languages.
+This Documentation Assistant is a powerful Visual Studio Code extension that leverages AI to automatically generate and update code documentation across multiple programming languages.
 
 ## Features
 
