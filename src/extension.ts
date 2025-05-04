@@ -1,8 +1,12 @@
 // src/extension.ts
 import * as vscode from 'vscode';
+import * as dotenv from 'dotenv'; 
 import { OpenAIService } from './openaiService';
 import { CodeParser } from './codeParser';
 import { Logger } from './utils/logger';
+
+// Load environment variables
+dotenv.config();
 
 // Define FunctionInfo interface to match CodeParser
 interface FunctionInfo {
@@ -24,10 +28,84 @@ export function activate(context: vscode.ExtensionContext) {
     const openaiService = new OpenAIService();
     const codeParser = new CodeParser();
 
+    // Helper function to clean up AI-generated documentation
+    const cleanupDocumentation = (documentation: string): string => {
+        return documentation
+            .replace(/```.*\n|Sure, here is the updated documentation:\n/g, '')
+            .replace(/^\/\*\*|\*\/$/gm, '')
+            .trim();
+    };
+
+    // Helper function to format documentation based on language
+    const formatDocumentation = (documentation: string, language: string): string => {
+        const cleanedDoc = cleanupDocumentation(documentation);
+
+        switch (language) {
+            case 'typescript':
+            case 'javascript':
+            case 'javascriptreact':
+            case 'typescriptreact':
+                // JSDoc style
+                const lines = cleanedDoc.split('\n').map(line => line.trim());
+                return [
+                    '/**',
+                    ...lines.map(line => ` * ${line}`),
+                    ' */',
+                    ''
+                ].join('\n');
+            
+            case 'python':
+                // Python docstring
+                return `"""\n${cleanedDoc}\n"""\n`;
+            
+            default:
+                // Generic comment
+                return cleanedDoc.split('\n')
+                    .map(line => `// ${line}`)
+                    .join('\n') + '\n';
+        }
+    };
+
+    // Get API key from multiple sources
+    const config = vscode.workspace.getConfiguration('gptDocAssistant');
+    const configApiKey = config.get<string>('openaiApiKey');
+    const envApiKey = process.env.OPENAI_API_KEY;
+
+    // Log API key sources for debugging
+    logger.info(`API Key from config: ${configApiKey ? 'Found' : 'Not Found'}`);
+    logger.info(`API Key from env: ${envApiKey ? 'Found' : 'Not Found'}`);
+
+    // Try to initialize with config key
+    let initialized = false;
+    if (configApiKey) {
+        initialized = openaiService.initialize(configApiKey);
+        logger.info(`Initialization with config key: ${initialized}`);
+    }
+
+    // If not initialized, try env key
+    if (!initialized && envApiKey) {
+        initialized = openaiService.initialize(envApiKey);
+        logger.info(`Initialization with env key: ${initialized}`);
+    }
+
+    // If still not initialized, show error
+    if (!initialized) {
+        vscode.window.showErrorMessage(
+            'OpenAI API key is not configured. Please set it in extension settings.'
+        );
+        return;
+    }
+
     // Register command to generate documentation
     let generateDocCommand = vscode.commands.registerTextEditorCommand(
         'gptDocAssistant.generateDoc', 
         async (textEditor, edit) => {
+            // Check if service is initialized before generating
+            if (!openaiService.isInitialized()) {
+                vscode.window.showErrorMessage('OpenAI service is not initialized.');
+                return;
+            }
+
             try {
                 // Find the function at the current cursor position
                 const functionInfo = codeParser.findFunctionAtPosition(
@@ -49,6 +127,14 @@ export function activate(context: vscode.ExtensionContext) {
                     // Generate documentation
                     const documentation = await openaiService.generateDocumentation(
                         functionInfo.body,
+                        functionInfo.language,
+                        '', // project context (optional)
+                        ''  // documentation standards (optional)
+                    );
+
+                    // Format documentation based on language
+                    const formattedDocumentation = formatDocumentation(
+                        documentation, 
                         functionInfo.language
                     );
 
@@ -58,7 +144,7 @@ export function activate(context: vscode.ExtensionContext) {
                     documentationEdit.insert(
                         textEditor.document.uri, 
                         insertPosition, 
-                        documentation + '\n'
+                        formattedDocumentation
                     );
 
                     // Apply the edit
@@ -72,10 +158,16 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    // Register command to update existing documentation
+    // Register command to update documentation
     let updateDocCommand = vscode.commands.registerTextEditorCommand(
         'gptDocAssistant.updateDoc',
         async (textEditor, edit) => {
+            // Check if service is initialized before updating
+            if (!openaiService.isInitialized()) {
+                vscode.window.showErrorMessage('OpenAI service is not initialized.');
+                return;
+            }
+
             try {
                 // Find the function at the current cursor position
                 const functionInfo = codeParser.findFunctionAtPosition(
@@ -102,6 +194,13 @@ export function activate(context: vscode.ExtensionContext) {
                     const updatedDocumentation = await openaiService.updateDocumentation(
                         functionInfo.body,
                         existingDoc,
+                        functionInfo.language,
+                        '' // project context (optional)
+                    );
+
+                    // Format updated documentation
+                    const formattedDocumentation = formatDocumentation(
+                        updatedDocumentation, 
                         functionInfo.language
                     );
 
@@ -120,7 +219,7 @@ export function activate(context: vscode.ExtensionContext) {
                     documentationEdit.replace(
                         textEditor.document.uri, 
                         range, 
-                        updatedDocumentation + '\n'
+                        formattedDocumentation
                     );
 
                     // Apply the edit

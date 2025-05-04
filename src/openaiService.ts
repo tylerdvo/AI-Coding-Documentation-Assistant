@@ -1,6 +1,10 @@
+import * as dotenv from 'dotenv'; // New import
 import { OpenAI } from 'openai';
 import * as vscode from 'vscode';
 import { Logger } from './utils/logger';
+
+// Load environment variables - New line
+dotenv.config();
 
 export class OpenAIService {
     private openai: OpenAI | null = null;
@@ -15,10 +19,19 @@ export class OpenAIService {
      * @param apiKey OpenAI API key
      * @returns Boolean indicating whether initialization was successful
      */
-    public initialize(apiKey: string): boolean {
+    public initialize(apiKey?: string): boolean { // Changed to optional parameter
         try {
+            // Try to use provided key or environment variable
+            const key = apiKey || process.env.OPENAI_API_KEY;
+            
+            // Added check for key existence
+            if (!key) {
+                this.logger.error('No API key provided');
+                return false;
+            }
+
             this.openai = new OpenAI({
-                apiKey: apiKey
+                apiKey: key
             });
             this.logger.info('OpenAI client initialized');
             return true;

@@ -144,17 +144,20 @@ export class DocumentationProvider {
      * @returns JSDoc formatted documentation
      */
     private formatJSDocDocumentation(documentation: string): string {
-        // Remove any existing JSDoc formatting
-        const cleanedDoc = documentation.replace(/^\/\*\*|\*\/$/gm, '').trim();
+        // Remove any existing code block markers or extra text
+        const cleanedDoc = documentation
+            .replace(/```.*\n|Sure, here is the updated documentation:\n/g, '')
+            .replace(/^\/\*\*|\*\/$/gm, '')
+            .trim();
         
         // Split into lines and add JSDoc formatting
-        const lines = cleanedDoc.split('\n');
+        const lines = cleanedDoc.split('\n').map(line => line.trim());
         const formattedLines = lines.map((line, index) => {
-            if (index === 0) return `/** ${line}`;
-            if (index === lines.length - 1) return ` * ${line} */`;
+            if (index === 0) return `/**\n * ${line}`;
+            if (index === lines.length - 1) return ` * ${line}\n */`;
             return ` * ${line}`;
         });
-
+    
         return formattedLines.join('\n');
     }
 
